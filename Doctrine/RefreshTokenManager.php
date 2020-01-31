@@ -49,12 +49,14 @@ class RefreshTokenManager extends BaseRefreshTokenManager
 
     /**
      * @param string $refreshToken
-     *
+     * @param string|null $fingerprint
      * @return RefreshTokenInterface
      */
-    public function get($refreshToken)
+    public function get(string $refreshToken, ?string $fingerprint)
     {
-        return $this->repository->findOneBy(array('refreshToken' => $refreshToken));
+        return $fingerprint ?
+                                $this->repository->findOneBy(array('refreshToken' => $refreshToken, 'fingerprint' => $fingerprint)) :
+                                $this->repository->findOneBy(array('refreshToken' => $refreshToken));
     }
 
     /**
@@ -112,6 +114,13 @@ class RefreshTokenManager extends BaseRefreshTokenManager
         }
 
         return $invalidTokens;
+    }
+
+    public function getByUsernameAndFingerprint(string $username, string $fingerprint)
+    {
+        $refreshToken = $this->repository->findOneBy(['username' => $username, 'fingerprint' => $fingerprint]);
+
+        return $refreshToken;
     }
 
     /**

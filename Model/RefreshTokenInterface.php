@@ -77,4 +77,15 @@ interface RefreshTokenInterface
      * @return bool
      */
     public function isValid();
+
+    /**
+     * @return string
+     */
+    public function getFingerprint();
+
+    /**
+     * @param string $fingerprint
+     * @return self
+     */
+    public function setFingerprint(string $fingerprint);
 }

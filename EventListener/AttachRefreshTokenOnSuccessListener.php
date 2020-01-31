@@ -15,6 +15,7 @@ use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenInterface;
 use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 use Gesdinet\JWTRefreshTokenBundle\Request\RequestRefreshToken;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -58,6 +59,11 @@ class AttachRefreshTokenOnSuccessListener
     protected $singleUse;
 
     /**
+     * @var string
+     */
+    protected $fingerprintKey;
+
+    /**
      * AttachRefreshTokenOnSuccessListener constructor.
      *
      * @param RefreshTokenManagerInterface $refreshTokenManager
@@ -67,6 +73,7 @@ class AttachRefreshTokenOnSuccessListener
      * @param string                       $userIdentityField
      * @param string                       $tokenParameterName
      * @param bool                         $singleUse
+     * @param string                       $fingerprintKey
      */
     public function __construct(
         RefreshTokenManagerInterface $refreshTokenManager,
@@ -75,7 +82,8 @@ class AttachRefreshTokenOnSuccessListener
         RequestStack $requestStack,
         $userIdentityField,
         $tokenParameterName,
-        $singleUse
+        $singleUse,
+        $fingerprintKey
     ) {
         $this->refreshTokenManager = $refreshTokenManager;
         $this->ttl = $ttl;
@@ -84,6 +92,7 @@ class AttachRefreshTokenOnSuccessListener
         $this->userIdentityField = $userIdentityField;
         $this->tokenParameterName = $tokenParameterName;
         $this->singleUse = $singleUse;
+        $this->fingerprintKey = $fingerprintKey;
     }
 
     public function attachRefreshToken(AuthenticationSuccessEvent $event)
@@ -91,19 +100,30 @@ class AttachRefreshTokenOnSuccessListener
         $data = $event->getData();
         $user = $event->getUser();
         $request = $this->requestStack->getCurrentRequest();
+        $fingerprint = $request->get($this->fingerprintKey, false);
 
         if (!$user instanceof UserInterface) {
             return;
         }
 
+        if (!$fingerprint) {
+            throw new BadRequestHttpException(sprintf('Field %s is required!', $this->fingerprintKey));
+        }
+
         $refreshTokenString = RequestRefreshToken::getRefreshToken($request, $this->tokenParameterName);
 
         if ($refreshTokenString && true === $this->singleUse) {
-            $refreshToken = $this->refreshTokenManager->get($refreshTokenString);
+            $refreshToken = $this->refreshTokenManager->get($refreshTokenString, $fingerprint);
             $refreshTokenString = null;
 
             if ($refreshToken instanceof RefreshTokenInterface) {
                 $this->refreshTokenManager->delete($refreshToken);
+            }
+        } else if (!$refreshTokenString) {
+            $refreshToken = $this->refreshTokenManager->getByUsernameAndFingerprint($user->getUsername(), $fingerprint);
+
+            if ($refreshToken) {
+                $refreshTokenString = $refreshToken->getRefreshToken();
             }
         }
 
@@ -119,6 +139,7 @@ class AttachRefreshTokenOnSuccessListener
             $userIdentityFieldValue = $accessor->getValue($user, $this->userIdentityField);
 
             $refreshToken->setUsername($userIdentityFieldValue);
+            $refreshToken->setFingerprint($fingerprint);
             $refreshToken->setRefreshToken();
             $refreshToken->setValid($datetime);
 

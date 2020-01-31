@@ -39,15 +39,22 @@ class RefreshTokenAuthenticator extends AbstractGuardAuthenticator
     protected $tokenParameterName;
 
     /**
+     * @var string
+     */
+    protected $fingerprintKey;
+
+    /**
      * Constructor.
      *
      * @param UserCheckerInterface $userChecker
      * @param string               $tokenParameterName
+     * @param string               $fingerprintKey
      */
-    public function __construct(UserCheckerInterface $userChecker, $tokenParameterName)
+    public function __construct(UserCheckerInterface $userChecker, string $tokenParameterName, string $fingerprintKey)
     {
         $this->userChecker = $userChecker;
         $this->tokenParameterName = $tokenParameterName;
+        $this->fingerprintKey = $fingerprintKey;
     }
 
     public function supports(Request $request)
@@ -59,6 +66,7 @@ class RefreshTokenAuthenticator extends AbstractGuardAuthenticator
     {
         return [
             'token' => RequestRefreshToken::getRefreshToken($request, $this->tokenParameterName),
+            'fingerprint' => $request->get($this->fingerprintKey, false)
         ];
     }
 
@@ -68,9 +76,13 @@ class RefreshTokenAuthenticator extends AbstractGuardAuthenticator
             throw new \InvalidArgumentException(sprintf('The user provider must be an instance of RefreshTokenProvider (%s was given).', get_class($userProvider)));
         }
 
+        if (!$credentials['fingerprint']) {
+            throw new AuthenticationException(sprintf('Request must provide %s field.', $this->fingerprintKey));
+        }
+
         $refreshToken = $credentials['token'];
 
-        $username = $userProvider->getUsernameForRefreshToken($refreshToken);
+        $username = $userProvider->getUsernameForRefreshToken($refreshToken, $credentials['fingerprint']);
 
         if (null === $username) {
             throw new AuthenticationException(sprintf('Refresh token "%s" does not exist.', $refreshToken));
