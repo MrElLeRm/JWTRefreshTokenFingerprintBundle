@@ -43,9 +43,9 @@ class RefreshTokenProvider implements UserProviderInterface
         $this->customUserProvider = $customUserProvider;
     }
 
-    public function getUsernameForRefreshToken($token)
+    public function getUsernameForRefreshToken($token, string $fingerprint)
     {
-        $refreshToken = $this->refreshTokenManager->get($token);
+        $refreshToken = $this->refreshTokenManager->get($token, $fingerprint);
 
         if ($refreshToken instanceof RefreshTokenInterface) {
             return $refreshToken->getUsername();

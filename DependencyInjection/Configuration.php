@@ -33,6 +33,7 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->integerNode('ttl')->defaultValue(2592000)->end()
                 ->booleanNode('ttl_update')->defaultFalse()->end()
+                ->scalarNode('fingerprint_key')->defaultValue('browser_fingerprint')->end()
                 ->scalarNode('firewall')->defaultValue('api')->end()
                 ->scalarNode('user_provider')->defaultNull()->end()
                 ->scalarNode('user_identity_field')->defaultValue('username')->end()

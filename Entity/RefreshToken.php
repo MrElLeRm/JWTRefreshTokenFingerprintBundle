@@ -26,10 +26,34 @@ class RefreshToken extends AbstractRefreshToken
     protected $id;
 
     /**
-     * {@inheritdoc}
+     * @var string
+     */
+    protected $fingerprint;
+
+    /**
+     * @return int
      */
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @param string $fingerprint
+     * @return $this
+     */
+    public function setFingerprint(string $fingerprint): RefreshToken
+    {
+        $this->fingerprint = $fingerprint;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFingerprint(): string
+    {
+        return $this->fingerprint;
     }
 }

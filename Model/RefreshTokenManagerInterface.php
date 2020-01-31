@@ -28,10 +28,11 @@ interface RefreshTokenManagerInterface
 
     /**
      * @param string $refreshToken
+     * @param string|null $fingerprint
      *
      * @return RefreshTokenInterface
      */
-    public function get($refreshToken);
+    public function get(string $refreshToken, ?string $fingerprint);
 
     /**
      * @param string $username
@@ -54,6 +55,13 @@ interface RefreshTokenManagerInterface
      * @return RefreshTokenInterface[]
      */
     public function revokeAllInvalid();
+
+    /**
+     * @param string $username
+     * @param string $fingerprint
+     * @return RefreshTokenInterface
+     */
+    public function getByUsernameAndFingerprint(string $username, string $fingerprint);
 
     /**
      * Returns the user's fully qualified class name.

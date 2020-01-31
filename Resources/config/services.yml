@@ -1,7 +1,7 @@
 services:
     gesdinet.jwtrefreshtoken.send_token:
         class: Gesdinet\JWTRefreshTokenBundle\EventListener\AttachRefreshTokenOnSuccessListener
-        arguments: [ "@gesdinet.jwtrefreshtoken.refresh_token_manager", "%gesdinet_jwt_refresh_token.ttl%", "@validator", "@request_stack", "%gesdinet_jwt_refresh_token.user_identity_field%", "%gesdinet_jwt_refresh_token.token_parameter_name%", "%gesdinet_jwt_refresh_token.single_use%" ]
+        arguments: [ "@gesdinet.jwtrefreshtoken.refresh_token_manager", "%gesdinet_jwt_refresh_token.ttl%", "@validator", "@request_stack", "%gesdinet_jwt_refresh_token.user_identity_field%", "%gesdinet_jwt_refresh_token.token_parameter_name%", "%gesdinet_jwt_refresh_token.single_use%", "%gesdinet_jwt_refresh_token.fingerprint_key%" ]
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: attachRefreshToken }
 
@@ -13,7 +13,7 @@ services:
     gesdinet.jwtrefreshtoken:
         class: Gesdinet\JWTRefreshTokenBundle\Service\RefreshToken
         public: true
-        arguments: [ "@gesdinet.jwtrefreshtoken.authenticator", "@gesdinet.jwtrefreshtoken.user_provider", "@lexik_jwt_authentication.handler.authentication_success", "@lexik_jwt_authentication.handler.authentication_failure", "@gesdinet.jwtrefreshtoken.refresh_token_manager", "%gesdinet_jwt_refresh_token.ttl%", "%gesdinet_jwt_refresh_token.security.firewall%", "%gesdinet_jwt_refresh_token.ttl_update%", "@event_dispatcher" ]
+        arguments: [ "@gesdinet.jwtrefreshtoken.authenticator", "@gesdinet.jwtrefreshtoken.user_provider", "@lexik_jwt_authentication.handler.authentication_success", "@lexik_jwt_authentication.handler.authentication_failure", "@gesdinet.jwtrefreshtoken.refresh_token_manager", "%gesdinet_jwt_refresh_token.ttl%", "%gesdinet_jwt_refresh_token.security.firewall%", "%gesdinet_jwt_refresh_token.ttl_update%", "%gesdinet_jwt_refresh_token.fingerprint_key%", "@event_dispatcher" ]
 
     gesdinet.jwtrefreshtoken.user_provider:
         class: Gesdinet\JWTRefreshTokenBundle\Security\Provider\RefreshTokenProvider
@@ -21,7 +21,7 @@ services:
 
     gesdinet.jwtrefreshtoken.authenticator:
         class: Gesdinet\JWTRefreshTokenBundle\Security\Authenticator\RefreshTokenAuthenticator
-        arguments: [ "@gesdinet.jwtrefreshtoken.user_checker", "%gesdinet_jwt_refresh_token.token_parameter_name%" ]
+        arguments: [ "@gesdinet.jwtrefreshtoken.user_checker", "%gesdinet_jwt_refresh_token.token_parameter_name%", "%gesdinet_jwt_refresh_token.fingerprint_key%" ]
 
     Gesdinet\JWTRefreshTokenBundle\Command\ClearInvalidRefreshTokensCommand:
         arguments: ['@gesdinet.jwtrefreshtoken.refresh_token_manager']

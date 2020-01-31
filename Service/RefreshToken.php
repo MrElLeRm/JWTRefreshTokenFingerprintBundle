@@ -14,6 +14,7 @@ namespace Gesdinet\JWTRefreshTokenBundle\Service;
 use Gesdinet\JWTRefreshTokenBundle\Event\RefreshEvent;
 use Gesdinet\JWTRefreshTokenBundle\Security\Authenticator\RefreshTokenAuthenticator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface as ContractsEventDispatcherInterface;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,6 +70,11 @@ class RefreshToken
     private $ttlUpdate;
 
     /**
+     * @var string
+     */
+    private $fingerprintKey;
+
+    /**
      * @var EventDispatcherInterface
      */
     private $eventDispatcher;
@@ -84,6 +90,7 @@ class RefreshToken
      * @param int                                   $ttl
      * @param string                                $providerKey
      * @param bool                                  $ttlUpdate
+     * @param string                                $fingerprintKey
      * @param EventDispatcherInterface              $eventDispatcher
      */
     public function __construct(
@@ -95,6 +102,7 @@ class RefreshToken
         $ttl,
         $providerKey,
         $ttlUpdate,
+        $fingerprintKey,
         EventDispatcherInterface $eventDispatcher
     ) {
         $this->authenticator = $authenticator;
@@ -105,6 +113,7 @@ class RefreshToken
         $this->ttl = $ttl;
         $this->providerKey = $providerKey;
         $this->ttlUpdate = $ttlUpdate;
+        $this->fingerprintKey = $fingerprintKey;
         $this->eventDispatcher = $eventDispatcher;
     }
 
@@ -120,6 +129,12 @@ class RefreshToken
      */
     public function refresh(Request $request)
     {
+        $fingerprint = $request->get($this->fingerprintKey, false);
+
+        if (!$fingerprint) {
+            throw new BadCredentialsException(sprintf('Refresh token requires field %s.', $this->fingerprintKey));
+        }
+
         try {
             $user = $this->authenticator->getUser(
                 $this->authenticator->getCredentials($request),
@@ -132,7 +147,7 @@ class RefreshToken
         }
 
         $credentials = $this->authenticator->getCredentials($request);
-        $refreshToken = $this->refreshTokenManager->get($credentials['token']);
+        $refreshToken = $this->refreshTokenManager->get($credentials['token'], $fingerprint);
 
         if (null === $refreshToken || !$refreshToken->isValid()) {
             return $this->failureHandler->onAuthenticationFailure($request, new AuthenticationException(
