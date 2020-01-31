@@ -1,10 +1,10 @@
 {
-  "name" : "gesdinet/jwt-refresh-token-bundle",
-  "description" : "Implements a refresh token system over Json Web Tokens in Symfony",
+  "name" : "mrellerm/jwt-refresh-token-bundle",
+  "description" : "Forked bundle gesdinet/jwt-refresh-token-bundle with added fingerprint to token refresh system. Implements a refresh token system over Json Web Tokens in Symfony",
   "type" : "symfony-bundle",
   "authors" : [{
-    "name" : "Marcos Gómez Vilches",
-    "email" : "marcos@gesdinet.com"
+    "name" : "German Kramar",
+    "email" : "bfpgera@gmail.com"
   }],
   "keywords" : [
     "jwt refresh token bundle symfony json web"
