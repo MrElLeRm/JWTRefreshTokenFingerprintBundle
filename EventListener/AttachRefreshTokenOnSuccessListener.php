@@ -100,7 +100,7 @@ class AttachRefreshTokenOnSuccessListener
         $data = $event->getData();
         $user = $event->getUser();
         $request = $this->requestStack->getCurrentRequest();
-        $fingerprint = $request->get($this->fingerprintKey, false);
+        $fingerprint = $request->get($this->fingerprintKey, md5($request->getClientIp() . $request->headers->get('User-Agent')));
 
         if (!$user instanceof UserInterface) {
             return;

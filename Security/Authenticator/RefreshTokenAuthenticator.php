@@ -66,7 +66,7 @@ class RefreshTokenAuthenticator extends AbstractGuardAuthenticator
     {
         return [
             'token' => RequestRefreshToken::getRefreshToken($request, $this->tokenParameterName),
-            'fingerprint' => $request->get($this->fingerprintKey, false)
+            'fingerprint' => $request->get($this->fingerprintKey, md5($request->getClientIp() . $request->headers->get('User-Agent')))
         ];
     }
 
