@@ -129,12 +129,6 @@ class RefreshToken
      */
     public function refresh(Request $request)
     {
-        $fingerprint = $request->get($this->fingerprintKey, false);
-
-        if (!$fingerprint) {
-            throw new BadCredentialsException(sprintf('Refresh token requires field %s.', $this->fingerprintKey));
-        }
-
         try {
             $user = $this->authenticator->getUser(
                 $this->authenticator->getCredentials($request),
@@ -144,6 +138,12 @@ class RefreshToken
             $postAuthenticationToken = $this->authenticator->createAuthenticatedToken($user, $this->providerKey);
         } catch (AuthenticationException $e) {
             return $this->failureHandler->onAuthenticationFailure($request, $e);
+        }
+
+        $fingerprint = $request->get($this->fingerprintKey, md5($request->getClientIp() . $request->headers->get('User-Agent')));
+
+        if (!$fingerprint) {
+            throw new BadCredentialsException(sprintf('Refresh token requires field %s.', $this->fingerprintKey));
         }
 
         $credentials = $this->authenticator->getCredentials($request);
